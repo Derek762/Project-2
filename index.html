@@ -3,22 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cuphead-Style Boss Fight</title>
+    <title>Cuphead-Style Boss Fight Game</title>
     <style>
-        body { background: #222; margin: 0; overflow: hidden; }
-        .center-container {
+        body {
+            background: #222;
+            color: #fff;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            height: 100vh;
-            width: 100vw;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
         }
-        canvas { display: block; background: #444; box-shadow: 0 0 24px #000a; }
+        #gameCanvas {
+            display: block;
+            background: #333;
+            border: 4px solid #fff;
+            margin: 32px auto 0 auto;
+            box-shadow: 0 0 32px #000a;
+        }
+        .instructions {
+            max-width: 700px;
+            margin: 0 auto;
+            font-size: 1.1em;
+            background: #181818;
+            padding: 18px 24px;
+            border-radius: 10px;
+            box-shadow: 0 2px 12px #0006;
+        }
+        a { color: #6cf; }
     </style>
 </head>
 <body>
-    <div class="center-container">
-        <canvas id="gameCanvas" width="900" height="500"></canvas>
+    <div id="container">
+        <h1>Cuphead-Style Boss Fight</h1>
+        <canvas id="gameCanvas"></canvas>
+        <div class="instructions">
+            <h2>How to Play</h2>
+            <ul>
+                <li><b>Move:</b> Left/Right Arrow Keys</li>
+                <li><b>Jump:</b> Up Arrow Key (jump high enough to reach platforms)</li>
+                <li><b>Glide:</b> Hold Up Arrow while falling to slow your descent (limited time)</li>
+                <li><b>Shoot:</b> Z Key (max 3 bullets at once)</li>
+                <li><b>Drop Through Platform:</b> Down Arrow Key (while standing on a platform)</li>
+                <li><b>Restart:</b> R Key (after win/lose)</li>
+            </ul>
+            <p>Defeat the boss by dodging attacks and shooting!<br>
+            <b>Note:</b> You must run this file on a local server (not by double-clicking).<br>
+            <b>To play:</b> Use a tool like <code>Live Server</code> in VS Code, or run <code>python3 -m http.server</code> in this folder and open <a href="http://localhost:8000" target="_blank">http://localhost:8000</a> in your browser.</p>
+        </div>
     </div>
     <script src="game.js"></script>
 </body>

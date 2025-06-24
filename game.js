@@ -1,3 +1,4 @@
+window.onload = function() {
 // Cuphead-style Boss Fight Game
 // Main game logic
 
@@ -13,7 +14,7 @@ const BOSS_WIDTH = 120;
 const BOSS_HEIGHT = 120;
 const BOSS_START_X = 600;
 const BOSS_START_Y = 100;
-const BOSS_MAX_HEALTH = 100;
+const BOSS_MAX_HEALTH = 200; // Increased boss health
 const PLAYER_MAX_HEALTH = 5;
 
 // Set arena size larger
@@ -90,7 +91,9 @@ function drawHealthBars() {
     ctx.fillStyle = '#fff';
     ctx.fillText('Boss', 600, 30);
     ctx.fillStyle = '#f44';
-    ctx.fillRect(660, 15, boss.health * 1.2, 15);
+    // Boss health bar: max width 240px, scales with health
+    const bossBarWidth = 240;
+    ctx.fillRect(660, 15, Math.max(0, boss.health / BOSS_MAX_HEALTH * bossBarWidth), 15);
 }
 
 function handleInput() {
@@ -109,8 +112,30 @@ window.addEventListener('keydown', e => {
         }
         // Jump with ArrowUp, only on keydown and only if on ground
         if (e.key === 'ArrowUp' && player.onGround) {
-            player.vy = -22; // Faster jump
+            player.vy = JUMP_VELOCITY;
             player.onGround = false;
+            jumpHeld = true;
+            glideActive = false;
+            glideFrames = 0;
+        }
+        // Drop through platform with ArrowDown
+        if (e.key === 'ArrowDown' && player.onGround) {
+            // Only allow drop if standing on a platform (not ground)
+            let onPlatform = false;
+            platforms.forEach(p => {
+                if (
+                    player.x + player.width > p.x &&
+                    player.x < p.x + p.w &&
+                    Math.abs(player.y + player.height - p.y) < 2 // standing on platform
+                ) {
+                    onPlatform = true;
+                }
+            });
+            if (onPlatform) {
+                droppingThroughPlatform = true;
+                dropBuffer = 10; // frames to ignore platform collision
+                player.onGround = false;
+            }
         }
     }
     if ((e.key === 'r' || e.key === 'R') && gameOver) {
@@ -119,40 +144,88 @@ window.addEventListener('keydown', e => {
 });
 window.addEventListener('keyup', e => {
     keys[e.key] = false;
+    if (e.key === 'ArrowUp') {
+        jumpHeld = false;
+    }
 });
 
-// Remove dash and drop down variables and logic
-// Remove: let droppingThroughPlatform = false; let dropBuffer = 0;
-// Remove all references to dashCooldown, DASH_DISTANCE, DASH_COOLDOWN_FRAMES, droppingThroughPlatform, dropBuffer
-// Remove dash and drop down logic from updatePhysics and keydown event
+// Prevent arrow keys from scrolling the page
+window.addEventListener('keydown', function(e) {
+    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " ", "Spacebar"].includes(e.key)) {
+        e.preventDefault();
+    }
+}, { passive: false });
+
+// Jump height control
+// Calculate jump velocity so player can reach first platform (platform at y=340, player starts at y=440)
+const JUMP_VELOCITY = -22; // Increased jump height to reach first platform
+let jumpHeld = false;
+let glideActive = false;
+let glideFrames = 0;
+
+// Glide control
+const GLIDE_GRAVITY = 0.18; // even slower fall when gliding
+const GLIDE_FRAMES = 32; // glide lasts longer
+
+// Dropping Through Platforms:
+// When the player presses the Down Arrow (ArrowDown) while standing on a platform,
+// the player temporarily ignores platform collisions and falls through.
+// This is controlled by the variables `droppingThroughPlatform` (true/false) and `dropBuffer` (frames to ignore collision).
+// After a short duration (`dropBuffer` frames), platform collision is re-enabled.
+let droppingThroughPlatform = false;
+let dropBuffer = 0;
 
 function updatePhysics() {
+    // Remove variable jump height logic, just apply gravity
+    let gravityToApply = GRAVITY;
+    if (player.vy > 0 && jumpHeld) {
+        if (!glideActive) {
+            glideActive = true;
+            glideFrames = 0;
+        }
+        if (glideFrames < GLIDE_FRAMES) {
+            gravityToApply = GLIDE_GRAVITY;
+            glideFrames++;
+        }
+    } else {
+        glideActive = false;
+        glideFrames = 0;
+    }
     // Player gravity
-    player.vy += GRAVITY;
+    player.vy += gravityToApply;
     player.y += player.vy;
     if (player.y + player.height >= GROUND_Y) {
         player.y = GROUND_Y - player.height;
         player.vy = 0;
         player.onGround = true;
+        glideActive = false;
     } else {
         player.onGround = false;
     }
     // Platform collision for player
     let onAnyPlatform = false;
-    platforms.forEach(p => {
-        if (
-            player.x + player.width > p.x &&
-            player.x < p.x + p.w &&
-            player.y + player.height > p.y &&
-            player.y + player.height - player.vy <= p.y
-        ) {
-            player.y = p.y - player.height;
-            player.vy = 0;
-            onAnyPlatform = true;
-        }
-    });
+    if (!droppingThroughPlatform) {
+        platforms.forEach(p => {
+            if (
+                player.x + player.width > p.x &&
+                player.x < p.x + p.w &&
+                player.y + player.height > p.y &&
+                player.y + player.height - player.vy <= p.y
+            ) {
+                player.y = p.y - player.height;
+                player.vy = 0;
+                onAnyPlatform = true;
+            }
+        });
+    }
     if (onAnyPlatform && player.vy >= 0) {
         player.onGround = true;
+    }
+    if (droppingThroughPlatform) {
+        dropBuffer--;
+        if (dropBuffer <= 0) {
+            droppingThroughPlatform = false;
+        }
     }
     // Boss gravity
     boss.vy += GRAVITY;
@@ -251,13 +324,9 @@ let fireBeamYPositions = [0, 0];
 // Add a variable to store sword slash position
 let swordSlashPosition = 'bottom';
 
-// Boss shooting pattern (always leaves one safe path)
-let shootPattern = [
-    180, // top
-    260, // middle
-    340  // bottom
-];
-let shootPatternIndex = 0;
+// Boss shooting pattern (now covers the whole screen except for a gap)
+let shootPatternGapY = 0;
+let shootPatternGapHeight = PLAYER_HEIGHT * 2.5; // Larger gap for easier dodging
 
 function bossAttack() {
     if (boss.attackCooldown > 0) {
@@ -273,14 +342,21 @@ function bossAttack() {
         bossWindupType = attacks[Math.floor(Math.random() * attacks.length)];
         bossWindup = true;
         bossWindupTimer = 0;
+        // Set swordSlashPosition at the start of windup for sword
+        if (bossWindupType === 'sword') {
+            swordSlashPosition = Math.random() < 0.5 ? 'top' : 'bottom';
+        }
         return;
     }
     if (bossWindup) {
         bossWindupTimer++;
-        if (bossWindupTimer >= 20) { // Faster windup
+        if (bossWindupTimer >= 40) { // Slower windup
             boss.attackType = bossWindupType;
             boss.attackTimer = 0;
             bossWindup = false;
+            if (bossWindupType === 'shoot') {
+                shootPatternGapY = Math.random() * (canvas.height - shootPatternGapHeight);
+            }
         }
         swordSlashActive = false;
         fireBeamActive = false;
@@ -289,38 +365,41 @@ function bossAttack() {
     if (boss.attackType === 'shoot') {
         swordSlashActive = false;
         fireBeamActive = false;
-        let shootInterval = 8; // Faster shooting
+        let shootInterval = 18; // Slower shooting
         if (boss.attackTimer % shootInterval === 0) {
-            for (let i = 0; i < 3; i++) {
-                if (i !== shootPatternIndex) {
-                    boss.bullets.push({
-                        x: boss.x,
-                        y: shootPattern[i],
-                        w: 48,
-                        h: 32,
-                        speed: 13 // Faster boss bullet
-                    });
+            let projectileHeight = 40;
+            for (let y = 0; y < canvas.height; y += projectileHeight) {
+                if (
+                    y + projectileHeight > shootPatternGapY &&
+                    y < shootPatternGapY + shootPatternGapHeight
+                ) {
+                    continue;
                 }
+                boss.bullets.push({
+                    x: boss.x,
+                    y: y,
+                    w: 48,
+                    h: projectileHeight,
+                    speed: 7 // Slower boss bullet
+                });
             }
-            shootPatternIndex = (shootPatternIndex + 1) % shootPattern.length;
         }
         boss.attackTimer++;
-        if (boss.attackTimer > 30) { // Shorter attack duration
+        if (boss.attackTimer > 36) { // Shorter attack duration
             boss.attackType = null;
-            boss.attackCooldown = 30; // Shorter cooldown
-            shootPatternIndex = 0;
+            boss.attackCooldown = 60; // Longer cooldown
         }
     } else if (boss.attackType === 'sword') {
         if (boss.attackTimer === 0) {
             boss.swordSlashing = true;
-            swordSlashPosition = Math.random() < 0.5 ? 'top' : 'bottom';
+            // swordSlashPosition is already set during windup
         }
-        swordSlashActive = boss.attackTimer > 10 && boss.attackTimer <= 30; // Shorter windup/active
+        swordSlashActive = boss.attackTimer > 20 && boss.attackTimer <= 60; // Slower windup/active
         boss.attackTimer++;
-        if (boss.attackTimer > 30) {
+        if (boss.attackTimer > 60) {
             boss.swordSlashing = false;
             boss.attackType = null;
-            boss.attackCooldown = 40; // Shorter cooldown
+            boss.attackCooldown = 80; // Longer cooldown
             swordSlashActive = false;
         }
     } else if (boss.attackType === 'firebeam') {
@@ -334,12 +413,12 @@ function bossAttack() {
             const shuffled = possibleY.sort(() => 0.5 - Math.random());
             fireBeamYPositions = [shuffled[0], shuffled[1]];
         }
-        fireBeamActive = boss.attackTimer > 8 && boss.attackTimer <= 24; // Shorter active
+        fireBeamActive = boss.attackTimer > 16 && boss.attackTimer <= 48; // Slower active
         boss.attackTimer++;
-        if (boss.attackTimer > 24) {
+        if (boss.attackTimer > 48) {
             boss.fireBeaming = false;
             boss.attackType = null;
-            boss.attackCooldown = 40; // Shorter cooldown
+            boss.attackCooldown = 80; // Longer cooldown
             fireBeamActive = false;
         }
     }
@@ -429,13 +508,11 @@ function drawBossWindup() {
         let text = '';
         if (bossWindupType === 'shoot') text = 'Boss is aiming!';
         if (bossWindupType === 'sword') {
-            // Show which slash is coming
             if (typeof swordSlashPosition !== 'undefined' && swordSlashPosition) {
                 let lowestPlatform = platforms.reduce((a, b) => (a.y > b.y ? a : b));
-                // Draw a shadow where the slash will hit
                 ctx.save();
-                ctx.globalAlpha = 0.45;
-                ctx.fillStyle = '#222';
+                ctx.globalAlpha = 0.35;
+                ctx.fillStyle = '#3af'; // Blue highlight
                 if (swordSlashPosition === 'top') {
                     ctx.fillRect(0, 0, canvas.width, lowestPlatform.y);
                     text = 'Boss is winding up a TOP slash!';
@@ -569,3 +646,4 @@ function gameLoop() {
 }
 
 gameLoop();
+};
