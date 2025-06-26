@@ -68,42 +68,150 @@ const GROUND_Y = canvas.height - 20;
 // Platforms
 const platforms = [
     { x: 180, y: 340, w: 120, h: 16 },
-    { x: 400, y: 260, w: 120, h: 16 },
-    { x: 650, y: 340, w: 120, h: 16 }
+    { x: 400, y: 260, w: 120, h: 16 }
+    // Removed the platform closest to the boss (the rightmost one)
 ];
 
 function drawPlayer() {
-    ctx.fillStyle = player.color;
-    ctx.fillRect(player.x, player.y, player.width, player.height);
+    // Improved player: blue body, white face, eyes, arms, legs
+    ctx.save();
+    // Body
+    ctx.fillStyle = '#3498db';
+    ctx.beginPath();
+    ctx.ellipse(player.x + player.width/2, player.y + player.height/2 + 4, player.width/2, player.height/2, 0, 0, 2*Math.PI);
+    ctx.fill();
+    // Face
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.ellipse(player.x + player.width/2, player.y + player.height/2 - 6, player.width/2.2, player.height/3.2, 0, 0, 2*Math.PI);
+    ctx.fill();
+    // Eyes
+    ctx.fillStyle = '#222';
+    ctx.beginPath();
+    ctx.arc(player.x + player.width/2 - 5, player.y + player.height/2 - 8, 2, 0, 2*Math.PI);
+    ctx.arc(player.x + player.width/2 + 5, player.y + player.height/2 - 8, 2, 0, 2*Math.PI);
+    ctx.fill();
+    // Arms
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(player.x + 4, player.y + player.height/2);
+    ctx.lineTo(player.x - 4, player.y + player.height/2 + 10);
+    ctx.moveTo(player.x + player.width - 4, player.y + player.height/2);
+    ctx.lineTo(player.x + player.width + 4, player.y + player.height/2 + 10);
+    ctx.stroke();
+    // Legs
+    ctx.beginPath();
+    ctx.moveTo(player.x + player.width/2 - 6, player.y + player.height);
+    ctx.lineTo(player.x + player.width/2 - 6, player.y + player.height + 10);
+    ctx.moveTo(player.x + player.width/2 + 6, player.y + player.height);
+    ctx.lineTo(player.x + player.width/2 + 6, player.y + player.height + 10);
+    ctx.stroke();
+    ctx.restore();
 }
 
 function drawBoss() {
-    ctx.fillStyle = boss.color;
-    ctx.fillRect(boss.x, boss.y, boss.width, boss.height);
-}
-
-function drawBullets() {
-    // Player bullets
-    ctx.fillStyle = '#fff';
-    player.bullets.forEach(b => ctx.fillRect(b.x, b.y, b.w, b.h));
-    // Boss bullets
-    ctx.fillStyle = '#ff0';
-    boss.bullets.forEach(b => ctx.fillRect(b.x, b.y, b.w, b.h));
+    // Improved boss: big red body, yellow eyes, horns, mouth
+    ctx.save();
+    // Body
+    ctx.fillStyle = '#e74c3c';
+    ctx.beginPath();
+    ctx.ellipse(boss.x + boss.width/2, boss.y + boss.height/2, boss.width/2, boss.height/2, 0, 0, 2*Math.PI);
+    ctx.fill();
+    // Eyes
+    ctx.fillStyle = '#ffd700';
+    ctx.beginPath();
+    ctx.ellipse(boss.x + boss.width/2 - 22, boss.y + boss.height/2 - 18, 10, 14, 0, 0, 2*Math.PI);
+    ctx.ellipse(boss.x + boss.width/2 + 22, boss.y + boss.height/2 - 18, 10, 14, 0, 0, 2*Math.PI);
+    ctx.fill();
+    ctx.fillStyle = '#222';
+    ctx.beginPath();
+    ctx.arc(boss.x + boss.width/2 - 22, boss.y + boss.height/2 - 14, 4, 0, 2*Math.PI);
+    ctx.arc(boss.x + boss.width/2 + 22, boss.y + boss.height/2 - 14, 4, 0, 2*Math.PI);
+    ctx.fill();
+    // Horns
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(boss.x + boss.width/2 - 32, boss.y + boss.height/2 - 40);
+    ctx.lineTo(boss.x + boss.width/2 - 44, boss.y + boss.height/2 - 60);
+    ctx.moveTo(boss.x + boss.width/2 + 32, boss.y + boss.height/2 - 40);
+    ctx.lineTo(boss.x + boss.width/2 + 44, boss.y + boss.height/2 - 60);
+    ctx.stroke();
+    // Mouth
+    ctx.strokeStyle = '#222';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(boss.x + boss.width/2, boss.y + boss.height/2 + 24, 18, 0, Math.PI, false);
+    ctx.stroke();
+    ctx.restore();
 }
 
 function drawHealthBars() {
     // Player
+    ctx.save();
+    ctx.font = '20px Arial';
     ctx.fillStyle = '#fff';
     ctx.fillText('Player', 20, 30);
+    // Player health bar background
+    ctx.fillStyle = '#222';
+    ctx.fillRect(90, 40, PLAYER_MAX_HEALTH * 30, 18);
+    // Player health bar foreground (rounded)
     ctx.fillStyle = '#6cf';
-    ctx.fillRect(90, 15, player.health * 30, 15);
+    ctx.beginPath();
+    // Clamp player.health to not go below 0
+    let playerHealthClamped = Math.max(0, player.health);
+    ctx.moveTo(90 + 9, 40);
+    ctx.lineTo(90 + playerHealthClamped * 30 - 9, 40);
+    ctx.quadraticCurveTo(90 + playerHealthClamped * 30, 40, 90 + playerHealthClamped * 30, 40 + 9);
+    ctx.lineTo(90 + playerHealthClamped * 30, 40 + 9);
+    ctx.quadraticCurveTo(90 + playerHealthClamped * 30, 40 + 18, 90 + playerHealthClamped * 30 - 9, 40 + 18);
+    ctx.lineTo(90 + 9, 40 + 18);
+    ctx.quadraticCurveTo(90, 40 + 18, 90, 40 + 9);
+    ctx.lineTo(90, 40 + 9);
+    ctx.quadraticCurveTo(90, 40, 90 + 9, 40);
+    ctx.closePath();
+    ctx.fill();
+    // Player health bar border
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(90, 40, PLAYER_MAX_HEALTH * 30, 18);
+    ctx.restore();
+
     // Boss
+    ctx.save();
+    ctx.font = '20px Arial';
     ctx.fillStyle = '#fff';
     ctx.fillText('Boss', 600, 30);
-    ctx.fillStyle = '#f44';
-    // Boss health bar: max width 240px, scales with health
-    const bossBarWidth = 240;
-    ctx.fillRect(660, 15, Math.max(0, boss.health / BOSS_MAX_HEALTH * bossBarWidth), 15);
+    // Boss health bar background
+    // Place boss bar at top right, with margin, and reduce width to fit
+    const bossBarWidth = 200;
+    const bossBarX = canvas.width - bossBarWidth - 30;
+    const bossBarY = 40;
+    ctx.fillStyle = '#222';
+    ctx.fillRect(bossBarX, bossBarY, bossBarWidth, 18);
+    // Boss health bar foreground (gradient, rounded)
+    let grad = ctx.createLinearGradient(bossBarX, bossBarY, bossBarX + bossBarWidth, bossBarY);
+    grad.addColorStop(0, '#f44');
+    grad.addColorStop(1, '#fa0');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(bossBarX + 9, bossBarY);
+    ctx.lineTo(bossBarX + Math.max(0, boss.health / BOSS_MAX_HEALTH * bossBarWidth) - 9, bossBarY);
+    ctx.quadraticCurveTo(bossBarX + Math.max(0, boss.health / BOSS_MAX_HEALTH * bossBarWidth), bossBarY, bossBarX + Math.max(0, boss.health / BOSS_MAX_HEALTH * bossBarWidth), bossBarY + 9);
+    ctx.lineTo(bossBarX + Math.max(0, boss.health / BOSS_MAX_HEALTH * bossBarWidth), bossBarY + 9);
+    ctx.quadraticCurveTo(bossBarX + Math.max(0, boss.health / BOSS_MAX_HEALTH * bossBarWidth), bossBarY + 18, bossBarX + Math.max(0, boss.health / BOSS_MAX_HEALTH * bossBarWidth) - 9, bossBarY + 18);
+    ctx.lineTo(bossBarX + 9, bossBarY + 18);
+    ctx.quadraticCurveTo(bossBarX, bossBarY + 18, bossBarX, bossBarY + 9);
+    ctx.lineTo(bossBarX, bossBarY + 9);
+    ctx.quadraticCurveTo(bossBarX, bossBarY, bossBarX + 9, bossBarY);
+    ctx.closePath();
+    ctx.fill();
+    // Boss health bar border
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(bossBarX, bossBarY, bossBarWidth, 18);
+    ctx.restore();
 }
 
 function handleInput() {
@@ -326,9 +434,10 @@ function updatePlayerBullets() {
 
 function updateBossBullets() {
     boss.bullets.forEach((b, i) => {
-        b.x -= b.speed;
+        // Use direction property to determine movement
+        b.x += (b.direction || -1) * b.speed;
         // Remove if off screen
-        if (b.x + b.w < 0) {
+        if (b.x > canvas.width || b.x + b.w < 0) {
             boss.bullets.splice(i, 1);
         }
         // Collision with player
@@ -355,10 +464,18 @@ function updateBossHomingProjectiles() {
             dx /= dist;
             dy /= dist;
         }
-        proj.vx = dx * (proj.speed + 2); // Make homing attack faster (was proj.speed)
-        proj.vy = dy * (proj.speed + 2);
+        proj.vx = dx * proj.speed; // Slower, more dogfight style
+        proj.vy = dy * proj.speed;
         proj.x += proj.vx;
         proj.y += proj.vy;
+        // Timeout after 8 seconds (unless persistent through next attack)
+        if (!homingBallPersistent) {
+            proj.lifetime--;
+            if (proj.lifetime <= 0) {
+                bossHomingProjectiles.splice(i, 1);
+                return;
+            }
+        }
         // Collision with player
         if (
             proj.x < player.x + player.width &&
@@ -367,34 +484,15 @@ function updateBossHomingProjectiles() {
             proj.y + proj.h > player.y &&
             player.health > 0
         ) {
-            bossHomingExplosions.push({x: proj.x + proj.w/2, y: proj.y + proj.h/2, r: 56, timer: 0});
-            player.health -= 1;
+            bossHomingExplosions.push({x: proj.x + proj.w/2, y: proj.y + proj.h/2, r: 80, timer: 0}); // Larger explosion radius
+            player.health -= 0.1; // Even less damage
             bossHomingProjectiles.splice(i, 1);
+            homingBallPersistent = false;
+            homingBallAttackCount = 0;
             return;
         }
-        // Collision with platforms
-        for (let p of platforms) {
-            if (
-                proj.x + proj.w > p.x &&
-                proj.x < p.x + p.w &&
-                proj.y + proj.h > p.y &&
-                proj.y < p.y + p.h
-            ) {
-                bossHomingExplosions.push({x: proj.x + proj.w/2, y: proj.y + proj.h/2, r: 56, timer: 0});
-                bossHomingProjectiles.splice(i, 1);
-                return;
-            }
-        }
-        // Collision with walls
-        if (
-            proj.x < 0 || proj.x + proj.w > canvas.width ||
-            proj.y < 0 || proj.y + proj.h > canvas.height
-        ) {
-            bossHomingExplosions.push({x: proj.x + proj.w/2, y: proj.y + proj.h/2, r: 56, timer: 0});
-            bossHomingProjectiles.splice(i, 1);
-            return;
-        }
-        // REMOVE: Collision with player bullets (player can no longer destroy homing projectiles)
+        // REMOVE: Collision with platforms (ball now passes through platforms)
+        // REMOVE: Collision with walls (ball now passes through walls)
     });
 }
 
@@ -407,7 +505,7 @@ function updateBossHomingExplosions() {
             let dy = (player.y + player.height/2) - exp.y;
             let dist = Math.sqrt(dx*dx + dy*dy);
             if (dist < exp.r) {
-                player.health -= 0.5;
+                player.health -= 0.2; // Even less explosion damage
             }
         }
         if (exp.timer > 20) bossHomingExplosions.splice(i, 1);
@@ -456,39 +554,55 @@ function bossAttack() {
         return;
     }
     if (!boss.attackType && !bossWindup) {
+        // If a persistent homing ball exists, increment attack count
+        if (bossHomingProjectiles.length > 0 && homingBallPersistent) {
+            homingBallAttackCount++;
+            // Remove the ball at the end of the next attack
+            if (homingBallAttackCount > 1) {
+                bossHomingProjectiles = [];
+                homingBallPersistent = false;
+                homingBallAttackCount = 0;
+            }
+        }
         // Randomly pick attack and start windup
-        const attacks = ['shoot', 'sword', 'homing'];
+        let attacks = ['shoot', 'sword', 'homing'];
+        // If a homing projectile is on screen, prevent 'sword' (top) as next attack
+        if (bossHomingProjectiles.length > 0) {
+            // Only allow 'sword' if it would be 'bottom' (set in windup below), so remove 'sword' from attacks for now
+            attacks = attacks.filter(a => a !== 'sword');
+        }
         bossWindupType = attacks[Math.floor(Math.random() * attacks.length)];
         bossWindup = true;
         bossWindupTimer = 0;
         // Set swordSlashPosition at the start of windup for sword
         if (bossWindupType === 'sword') {
-            swordSlashPosition = Math.random() < 0.5 ? 'top' : 'bottom';
+            // If a homing projectile is on screen, force 'bottom' slash
+            if (bossHomingProjectiles.length > 0) {
+                swordSlashPosition = 'bottom';
+            } else {
+                swordSlashPosition = Math.random() < 0.5 ? 'top' : 'bottom';
+            }
         }
         return;
     }
     if (bossWindup) {
         bossWindupTimer++;
-        if (bossWindupTimer >= 40) { // Slower windup
+        if (bossWindupTimer >= 40) {
             boss.attackType = bossWindupType;
             boss.attackTimer = 0;
             bossWindup = false;
-            if (bossWindupType === 'shoot') {
-                // Make gap always at least as high as the first platform (platforms[0].y)
-                const minGapY = 0;
-                const maxGapY = platforms[0].y - shootPatternGapHeight - 10; // 10px buffer
-                shootPatternGapY = minGapY + Math.random() * (maxGapY - minGapY);
-            }
+            // No gap for reverted shooting attack
         }
         swordSlashActive = false;
         return;
     }
     if (boss.attackType === 'shoot') {
         swordSlashActive = false;
-        let shootInterval = 18; // Slower shooting
+        let shootInterval = 22; // Even slower shooting
         if (boss.attackTimer % shootInterval === 0) {
             let projectileHeight = 40;
-            for (let y = 0; y < canvas.height; y += projectileHeight) {
+            // Restore original: fill the screen with bullets except for the gap
+            for (let y = 0; y < platforms[0].y; y += projectileHeight) {
                 if (
                     y + projectileHeight > shootPatternGapY &&
                     y < shootPatternGapY + shootPatternGapHeight
@@ -496,11 +610,12 @@ function bossAttack() {
                     continue;
                 }
                 boss.bullets.push({
-                    x: boss.x,
+                    x: canvas.width + 48, // Start just off the right edge
                     y: y,
                     w: 48,
                     h: projectileHeight,
-                    speed: 7 // Slower boss bullet
+                    speed: 3.5, // Slower boss bullet, moves left
+                    direction: -1 // Leftward
                 });
             }
         }
@@ -523,20 +638,24 @@ function bossAttack() {
             swordSlashActive = false;
         }
     } else if (boss.attackType === 'homing') {
-        // Fire a homing projectile at the start and every 30 frames (max 3)
-        if (boss.attackTimer % 30 === 0 && boss.attackTimer < 90) {
+        // Only one homing ball at a time, fire at the start of the attack
+        if (boss.attackTimer === 0 && bossHomingProjectiles.length === 0) {
             bossHomingProjectiles.push({
                 x: boss.x + boss.width / 2 - 16,
                 y: boss.y + boss.height / 2 - 16,
                 w: 32,
                 h: 32,
-                speed: 5,
+                speed: 2.5, // Slow for dogfight style
                 vx: 0,
-                vy: 0
+                vy: 0,
+                lifetime: 480 // 8 seconds at 60 FPS (lasts through next attack)
             });
+            homingBallPersistent = true;
+            homingBallAttackCount = 0;
         }
         boss.attackTimer++;
-        if (boss.attackTimer > 90) {
+        // End attack after a while, but let the ball persist
+        if (boss.attackTimer > 120) {
             boss.attackType = null;
             boss.attackCooldown = 80;
         }
@@ -554,7 +673,7 @@ function checkBossAttackDamage() {
                 player.y > lowestPlatform.y + lowestPlatform.h - 1 &&
                 player.y < canvas.height
             ) {
-                player.health -= 0.5; // More noticeable damage per frame
+                player.health -= 0.25; // Less sword slash damage
             }
         } else {
             // Hit everything above the lowest platform
@@ -562,7 +681,7 @@ function checkBossAttackDamage() {
                 player.y + player.height < lowestPlatform.y + 1 &&
                 player.y + player.height > 0
             ) {
-                player.health -= 0.5;
+                player.health -= 0.25; // Less sword slash damage
             }
         }
     }
@@ -590,6 +709,7 @@ function drawSwordSlash() {
 }
 
 function drawBossWindup() {
+    if (gameOver) return; // Do not draw windup text if game is over
     if (bossWindup) {
         ctx.save();
         ctx.globalAlpha = 0.7;
@@ -642,64 +762,58 @@ let countdownTimer = 0;
 function drawCountdown() {
     if (!fightStarted) {
         ctx.save();
-        ctx.fillStyle = '#fff';
-        ctx.font = '64px Arial';
-        if (countdown > 0) {
-            ctx.fillText(countdown, canvas.width / 2 - 20, canvas.height / 2);
+        }tx.fillStyle = '#fff';
+        ctx.restore();px Arial';
+    }   if (countdown > 0) {
+}           ctx.fillText(countdown, canvas.width / 2 - 20, canvas.height / 2);
         } else {
-            ctx.fillText('FIGHT!', canvas.width / 2 - 90, canvas.height / 2);
-        }
-        ctx.restore();
-    }
-}
-
-function drawEXChargeBar() {
+function drawEXChargeBar() {GHT!', canvas.width / 2 - 90, canvas.height / 2);
     // Draw EX charge bar at bottom center
     const barWidth = 200;
     const barHeight = 18;
     const x = canvas.width / 2 - barWidth / 2;
     const y = canvas.height - 32;
-    ctx.save();
-    ctx.fillStyle = '#222';
+    ctx.save();ChargeBar() {
+    ctx.fillStyle = '#222';t bottom center
     ctx.fillRect(x, y, barWidth, barHeight);
     ctx.fillStyle = exReady ? '#ff0' : '#0cf';
     ctx.fillRect(x, y, (exCharge / EX_CHARGE_MAX) * barWidth, barHeight);
-    ctx.strokeStyle = '#fff';
+    ctx.strokeStyle = '#fff'; 32;
     ctx.strokeRect(x, y, barWidth, barHeight);
     ctx.font = '16px Arial';
     ctx.fillStyle = exReady ? '#ff0' : '#fff';
     ctx.fillText(exReady ? 'EX READY!' : 'EX CHARGE', x + barWidth / 2 - 40, y + 14);
-    ctx.restore();
-}
-
-function checkGameOver() {
-    if (player.health <= 0) {
-        ctx.fillStyle = '#f00';
+    ctx.restore();, y, (exCharge / EX_CHARGE_MAX) * barWidth, barHeight);
+}   ctx.strokeStyle = '#fff';
+    ctx.strokeRect(x, y, barWidth, barHeight);
+function checkGameOver() {';
+    if (player.health <= 0) { '#ff0' : '#fff';
+        ctx.fillStyle = '#f00';READY!' : 'EX CHARGE', x + barWidth / 2 - 40, y + 14);
         ctx.font = '48px Arial';
         ctx.fillText('GAME OVER', canvas.width / 2 - 140, canvas.height / 2);
         ctx.font = '28px Arial';
         ctx.fillStyle = '#fff';
         ctx.fillText('Press R to Restart', canvas.width / 2 - 110, canvas.height / 2 + 50);
-        gameOver = true;
+        gameOver = true;'#f00';
         // Reset EX charge on loss
-        exCharge = 0;
-        exReady = false;
-        exActive = false;
-        return true;
+        exCharge = 0;'GAME OVER', canvas.width / 2 - 140, canvas.height / 2);
+        exReady = false; Arial';
+        exActive = false;#fff';
+        return true;('Press R to Restart', canvas.width / 2 - 110, canvas.height / 2 + 50);
     } else if (boss.health <= 0) {
-        ctx.fillStyle = '#0f0';
+        ctx.fillStyle = '#0f0';oss
         ctx.font = '48px Arial';
         ctx.fillText('YOU WIN!', canvas.width / 2 - 120, canvas.height / 2);
         ctx.font = '28px Arial';
         ctx.fillStyle = '#fff';
         ctx.fillText('Press R to Restart', canvas.width / 2 - 110, canvas.height / 2 + 50);
+        gameOver = true;'#0f0';
+        return true;48px Arial';
+    }   ctx.fillText('YOU WIN!', canvas.width / 2 - 120, canvas.height / 2);
+    gameOver = false;8px Arial';
+    return false;tyle = '#fff';
+}       ctx.fillText('Press R to Restart', canvas.width / 2 - 110, canvas.height / 2 + 50);
         gameOver = true;
-        return true;
-    }
-    gameOver = false;
-    return false;
-}
-
 function restartGame() {
     player.health = PLAYER_MAX_HEALTH;
     boss.health = BOSS_MAX_HEALTH;
@@ -707,64 +821,80 @@ function restartGame() {
     boss.bullets = [];
     bossHomingProjectiles = [];
     bossHomingExplosions = [];
-    player.x = 60;
+    player.x = 60;= PLAYER_MAX_HEALTH;
     player.y = canvas.height - PLAYER_HEIGHT - 20;
     boss.x = canvas.width - BOSS_WIDTH - 60;
     boss.y = canvas.height - BOSS_HEIGHT - 20;
-    gameOver = false;
-    fightStarted = false;
+    gameOver = false;iles = [];
+    fightStarted = false;= [];
     countdown = 3;
-    countdownTimer = 0;
-    // Reset all boss attack states
-    boss.swordSlashing = false;
+    countdownTimer = 0;eight - PLAYER_HEIGHT - 20;
+    // Reset all boss attack statesDTH - 60;
+    boss.swordSlashing = false;SS_HEIGHT - 20;
     swordSlashActive = false;
-    bossWindup = false;
+    bossWindup = false;e;
     bossWindupType = null;
     bossWindupTimer = 0;
-    boss.attackType = null;
-    boss.attackCooldown = 0;
-    boss.attackTimer = 0;
+    boss.attackType = null;k states
+    boss.attackCooldown = 0;se;
+    boss.attackTimer = 0;lse;
     swordSlashPosition = 'bottom';
     shootPatternIndex = 0;
     // Reset EX charge and state on restart
-    exCharge = 0;
-    exReady = false;
-    exActive = false;
-}
-
-// Game loop
+    exCharge = 0;pe = null;
+    exReady = false;own = 0;
+    exActive = false;= 0;
+}   swordSlashPosition = 'bottom';
+    shootPatternIndex = 0;
+// Add back the drawBullets functionrestart
+function drawBullets() {
+    // Player bullets
+    ctx.fillStyle = '#fff';
+    player.bullets.forEach(b => ctx.fillRect(b.x, b.y, b.w, b.h));
+    // Boss bullets
+    ctx.fillStyle = '#ff0'; function
+    boss.bullets.forEach(b => ctx.fillRect(b.x, b.y, b.w, b.h));
+}   // Player bullets
+    ctx.fillStyle = '#fff';
+// Game loopullets.forEach(b => ctx.fillRect(b.x, b.y, b.w, b.h));
 function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (!fightStarted) {
+    if (!fightStarted) {(b => ctx.fillRect(b.x, b.y, b.w, b.h));
         countdownTimer++;
         if (countdownTimer % 60 === 0 && countdown > 0) {
             countdown--;
-        }
+        }gameLoop() {
         if (countdown === 0 && countdownTimer > 60 * 1.5) {
             fightStarted = true;
-        }
-    }
+        }ountdownTimer++;
+    }   if (countdownTimer % 60 === 0 && countdown > 0) {
     if (!gameOver && fightStarted) {
         handleInput();
-        updatePhysics();
-        updatePlayerBullets();
+        updatePhysics();= 0 && countdownTimer > 60 * 1.5) {
+        updatePlayerBullets();e;
         updateBossBullets();
         updateBossHomingProjectiles();
         updateBossHomingExplosions();
-        bossAttack();
+        bossAttack();;
         checkBossAttackDamage();
-    }
-    drawPlatforms();
-    drawPlayer();
-    drawBoss();
-    drawBullets();
-    drawSwordSlash();
+    }   updatePlayerBullets();
+    drawPlatforms();llets();
+    drawPlayer();sHomingProjectiles();
+    drawBoss();ossHomingExplosions();
+    drawBullets();();
+    drawSwordSlash();ckDamage();
     drawBossHomingProjectiles();
     drawBossHomingExplosions();
     drawBossWindup();
     drawHealthBars();
     drawCountdown();
     drawEXChargeBar();
+    checkGameOver();ojectiles();
+    requestAnimationFrame(gameLoop);
+}   drawBossWindup();
+    drawHealthBars();
+gameLoop();ntdown();
+};  drawEXChargeBar();
     checkGameOver();
     requestAnimationFrame(gameLoop);
 }
