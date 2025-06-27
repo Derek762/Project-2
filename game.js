@@ -515,8 +515,8 @@ function updateBossAimingProjectiles() {
         proj.age++;
         // Gradually increase speed up to a cap
         proj.speed = Math.min(MAX_AIMING_SPEED, proj.speed + 0.18);
-        // Homing strength reduced for blue aiming projectiles
-        let homingStrength = 0.003; // Reduced homing
+        // Homing strength increased for more visible homing
+        let homingStrength = 0.02; // Increased homing for blue aiming projectiles
         // Add homing effect: slightly adjust velocity toward player each frame
         let px = player.x + player.width / 2;
         let py = player.y + player.height / 2;
@@ -594,7 +594,7 @@ function updateBossHomingProjectiles() {
             player.health > 0
         ) {
             bossHomingExplosions.push({x: proj.x + proj.w/2, y: proj.y + proj.h/2, r: 80, timer: 0}); // Larger explosion radius
-            player.health -= 0.1; // Even less damage
+            player.health -= 0.03; // Even less damage (was 0.1)
             bossHomingProjectiles.splice(i, 1);
             homingBallPersistent = false;
             homingBallAttackCount = 0;
@@ -876,29 +876,33 @@ function drawSwordSlash() {
     }
 }
 
-// Draws a visual warning when the boss is winding up for an attack
-function drawBossWindup() {
-    if (typeof bossWindup !== 'undefined' && bossWindup) {
+function drawSwordSlashIndicator() {
+    if (bossWindup && bossWindupType === 'sword') {
         ctx.save();
-        // Glowing red outline
-        ctx.shadowColor = '#f00';
-        ctx.shadowBlur = 32;
-        ctx.lineWidth = 8;
-        ctx.strokeStyle = 'rgba(255,0,0,0.7)';
-        ctx.beginPath();
-        ctx.ellipse(boss.x + boss.width/2, boss.y + boss.height/2, boss.width/2 + 10, boss.height/2 + 10, 0, 0, 2*Math.PI);
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-        // Choose color based on attack type
-        let markColor = '#ff0'; // default yellow
-        if (bossWindupType === 'sword') markColor = '#bbb'; // gray for sword slash
-        else if (bossWindupType === 'homing') markColor = '#fa0'; // orange/yellow
-        else if (bossWindupType === 'aim') markColor = '#0ff'; // cyan
-        // Draw warning text above boss
-        ctx.font = 'bold 40px sans-serif';
-        ctx.fillStyle = markColor;
-        ctx.textAlign = 'center';
-        ctx.fillText('!!', boss.x + boss.width/2, boss.y - 10);
+        // Find the lowest platform
+        let lowestPlatform = platforms.reduce((a, b) => (a.y > b.y ? a : b));
+        let slashY, slashHeight;
+        if (swordSlashPosition === 'bottom') {
+            slashY = lowestPlatform.y + lowestPlatform.h;
+            slashHeight = canvas.height - slashY;
+        } else {
+            slashY = 0;
+            slashHeight = lowestPlatform.y;
+        }
+        // Glowing band indicator
+        let time = Date.now() / 200;
+        for (let i = 0; i < 3; i++) {
+            ctx.globalAlpha = 0.18 - i * 0.05 + 0.05 * Math.abs(Math.sin(time + i));
+            ctx.fillStyle = i % 2 === 0 ? '#bbb' : '#6cf';
+            ctx.beginPath();
+            ctx.moveTo(0, slashY + i * 8);
+            ctx.lineTo(canvas.width, slashY + i * 8);
+            ctx.lineTo(canvas.width, slashY + i * 8 + 18);
+            ctx.lineTo(0, slashY + i * 8 + 18);
+            ctx.closePath();
+            ctx.fill();
+        }
+        ctx.globalAlpha = 1;
         ctx.restore();
     }
 }
@@ -950,6 +954,12 @@ function drawBullets() {
 
 function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (gameOver) {
+        // Only draw the end screen, keep animating it
+        showEndScreen(boss.health <= 0);
+        requestAnimationFrame(gameLoop);
+        return;
+    }
     if (!fightStarted) {
         countdownTimer++;
         if (countdownTimer % 60 === 0 && countdown > 0) {
@@ -966,7 +976,7 @@ function gameLoop() {
         updateBossBullets();
         updateBossHomingProjectiles();
         updateBossHomingExplosions();
-        updateBossAimingProjectiles(); // update aiming attack
+        updateBossAimingProjectiles();
         bossAttack();
         checkBossAttackDamage();
     }
@@ -974,10 +984,12 @@ function gameLoop() {
     drawPlayer();
     drawBoss();
     drawBullets();
+    // Draw sword slash indicator before the slash happens
+    drawSwordSlashIndicator();
     drawSwordSlash();
     drawBossHomingProjectiles();
     drawBossHomingExplosions();
-    drawBossAimingProjectiles(); // draw aiming attack
+    drawBossAimingProjectiles();
     drawBossWindup();
     drawHealthBars();
     drawCountdown();
@@ -987,11 +999,153 @@ function gameLoop() {
 }
 
 gameLoop();
-};
+
+function restartGame() {
+    // Reset player
+    player.x = 60;
+    player.y = canvas.height - PLAYER_HEIGHT - 20;
+    player.health = PLAYER_MAX_HEALTH;
+    player.bullets = [];
+    player.vy = 0;
+    player.onGround = false;
+    // Reset boss
+    boss.x = canvas.width - BOSS_WIDTH - 60;
+    boss.y = canvas.height - BOSS_HEIGHT - 20;
+    boss.health = BOSS_MAX_HEALTH;
+    boss.attackCooldown = 0;
+    boss.attackType = null;
+    boss.attackTimer = 0;
+    boss.bullets = [];
+    boss.swordSlashing = false;
+    boss.vy = 0;
+    boss.onGround = false;
+    // Reset projectiles and effects
+    bossHomingProjectiles = [];
+    bossHomingExplosions = [];
+    bossAimingProjectiles = [];
+    // Reset EX state
+    exCharge = 0;
+    exReady = false;
+    exActive = false;
+    // Reset attack state
+    swordSlashActive = false;
+    swordSlashPosition = 'bottom';
+    homingBallPersistent = false;
+    homingBallAttackCount = 0;
+    shootPatternIndex = 0;
+    bossWindup = false;
+    bossWindupType = null;
+    bossWindupTimer = 0;
+    // Reset input and platform drop
+    keys = {};
+    jumpHeld = false;
+    glideActive = false;
+    glideFrames = 0;
+    droppingThroughPlatform = false;
+    dropBuffer = 0;
+    // Reset game state
+    gameOver = false;
+    fightStarted = false;
+    countdown = 3;
+    countdownTimer = 0;
+}
+
+function showEndScreen(win) {
+    // Overlay
+    ctx.save();
+    ctx.globalAlpha = 0.82;
+    ctx.fillStyle = '#111';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.globalAlpha = 1;
+    // Centered panel
+    const panelW = 520, panelH = 340;
+    const panelX = (canvas.width - panelW) / 2;
+    const panelY = (canvas.height - panelH) / 2;
+    // Shadow
+    ctx.save();
+    ctx.shadowColor = win ? '#ffd700' : '#f44';
+    ctx.shadowBlur = 32;
+    ctx.fillStyle = '#23232b';
+    ctx.strokeStyle = win ? '#ffd700' : '#f44';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(panelX + 24, panelY);
+    ctx.lineTo(panelX + panelW - 24, panelY);
+    ctx.quadraticCurveTo(panelX + panelW, panelY, panelX + panelW, panelY + 24);
+    ctx.lineTo(panelX + panelW, panelY + panelH - 24);
+    ctx.quadraticCurveTo(panelX + panelW, panelY + panelH, panelX + panelW - 24, panelY + panelH);
+    ctx.lineTo(panelX + 24, panelY + panelH);
+    ctx.quadraticCurveTo(panelX, panelY + panelH, panelX, panelY + panelH - 24);
+    ctx.lineTo(panelX, panelY + 24);
+    ctx.quadraticCurveTo(panelX, panelY, panelX + 24, panelY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+    // Animated win/lose text
+    let t = Date.now() / 400;
+    ctx.save();
+    ctx.font = 'bold 70px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = win ? '#ffd700' : '#f44';
+    ctx.shadowBlur = 18 + 8 * Math.abs(Math.sin(t));
+    ctx.fillStyle = win ? '#ffd700' : '#f44';
+    ctx.fillText(win ? 'YOU WIN!' : 'YOU LOSE!', canvas.width / 2, panelY + 90);
+    ctx.restore();
+    // Instructions (always show, but update for clarity)
+    ctx.save();
+    ctx.font = 'bold 30px sans-serif';
+    ctx.fillStyle = '#fff';
+    ctx.shadowBlur = 0;
+    ctx.textAlign = 'center';
+    ctx.fillText('Press R to Restart', canvas.width / 2, win ? (panelY + 140) : (panelY + 170));
+    ctx.font = '24px sans-serif';
+    ctx.fillStyle = '#ccc';
+    ctx.fillText('Controls:', canvas.width / 2, panelY + 185);
+    ctx.font = '20px sans-serif';
+    ctx.fillStyle = '#bfc9ca';
+    ctx.textAlign = 'left';
+    const cx = canvas.width / 2 - 170;
+    ctx.fillText('↔ Arrow keys: Move left/right', cx, panelY + 220);
+    ctx.fillText('↑ Arrow: Jump (hold for glide)', cx, panelY + 245);
+    ctx.fillText('↓ Arrow: Drop through platform', cx, panelY + 270);
+    ctx.fillText('Z: Shoot (max 3 bullets)', cx, panelY + 295);
+    ctx.fillText('X: EX attack (when EX bar is full)', cx, panelY + 320);
+    ctx.restore();
+    // Icon for win/lose
+    ctx.save();
+    ctx.globalAlpha = 0.18;
+    ctx.beginPath();
+    if (win) {
+        ctx.arc(canvas.width / 2, panelY + 60, 38, 0, 2 * Math.PI);
+        ctx.fillStyle = '#ffd700';
+    } else {
+        ctx.arc(canvas.width / 2, panelY + 60, 38, 0, 2 * Math.PI);
+        ctx.fillStyle = '#f44';
+    }
+    ctx.fill();
+    ctx.restore();
+}
+
+function checkGameOver() {
+    if (!gameOver) {
+        if (player.health <= 0) {
+            gameOver = true;
+            setTimeout(() => {
+                showEndScreen(false);
+            }, 100);
+        } else if (boss.health <= 0) {
+            gameOver = true;
+            setTimeout(() => {
+                showEndScreen(true);
+            }, 100);
+        }
+    }
+}
 
 /*
 INSTRUCTIONS:
-- Arrow keys: Move and jump (Up to jump, Down to drop through platforms)
+- Arrow keys: Move left/right, jump (hold up to glide), drop through platforms (down)
 - Z: Shoot (max 3 bullets on screen)
 - X: EX attack (when EX bar is full)
 - R: Restart after game over/win
@@ -999,5 +1153,82 @@ INSTRUCTIONS:
 BOSS ATTACKS:
 - Sword Slash: Covers top or bottom half of arena, now with animated energy wave effect.
 - Orange Homing Ball: Much faster, fixed speed, lasts until the end of the next boss attack (not just a timer).
-- Blue Aiming Attack: Fires 3 projectiles in sequence, each with reduced homing.
+- Blue Aiming Attack: Fires 3 projectiles in sequence, each with visible homing.
 */
+
+function drawBossWindup() {
+    if (typeof bossWindup !== 'undefined' && bossWindup) {
+        ctx.save();
+        // Glowing red outline
+        ctx.shadowColor = '#f00';
+        ctx.shadowBlur = 32;
+        ctx.lineWidth = 8;
+        ctx.strokeStyle = 'rgba(255,0,0,0.7)';
+        ctx.beginPath();
+        ctx.ellipse(boss.x + boss.width/2, boss.y + boss.height/2, boss.width/2 + 10, boss.height/2 + 10, 0, 0, 2*Math.PI);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        // Choose color based on attack type
+        let markColor = '#ff0'; // default yellow
+        if (bossWindupType === 'sword') markColor = '#bbb'; // gray for sword slash
+        else if (bossWindupType === 'homing') markColor = '#fa0'; // orange/yellow
+        else if (bossWindupType === 'aim') markColor = '#0ff'; // cyan
+        // Draw warning text above boss
+        ctx.font = 'bold 40px sans-serif';
+        ctx.fillStyle = markColor;
+        ctx.textAlign = 'center';
+        ctx.fillText('!!', boss.x + boss.width/2, boss.y - 10);
+        ctx.restore();
+    }
+}
+
+function drawCountdown() {
+    if (!fightStarted) {
+        ctx.save();
+        ctx.font = 'bold 80px sans-serif';
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.globalAlpha = 0.85;
+        if (countdown > 0) {
+            ctx.fillText(countdown, canvas.width / 2, canvas.height / 2 - 40);
+        } else {
+            ctx.font = 'bold 48px sans-serif';
+            ctx.fillStyle = '#ffd700';
+            ctx.fillText('FIGHT!', canvas.width / 2, canvas.height / 2 - 40);
+        }
+        ctx.globalAlpha = 1;
+        ctx.restore();
+    }
+}
+
+function drawEXChargeBar() {
+    ctx.save();
+    // Bar background
+    ctx.fillStyle = '#222';
+    ctx.fillRect(90, 70, 180, 14);
+    // Bar fill
+    let fillWidth = (exCharge / EX_CHARGE_MAX) * 180;
+    let grad = ctx.createLinearGradient(90, 70, 270, 70);
+    grad.addColorStop(0, '#ffd700');
+    grad.addColorStop(1, '#fa0');
+    ctx.fillStyle = grad;
+    ctx.fillRect(90, 70, fillWidth, 14);
+    // Bar border
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(90, 70, 180, 14);
+    // Label
+    ctx.font = '16px sans-serif';
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'left';
+    ctx.fillText('EX', 50, 82);
+    // Ready indicator
+    if (exReady) {
+        ctx.font = 'bold 18px sans-serif';
+        ctx.fillStyle = '#ffd700';
+        ctx.textAlign = 'center';
+        ctx.fillText('READY!', 180, 65);
+    }
+    ctx.restore();
+}
+}
