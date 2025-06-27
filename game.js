@@ -72,27 +72,57 @@ const platforms = [
     // Removed the platform closest to the boss (the rightmost one)
 ];
 
+// Gap variables for boss shoot pattern
+let shootPatternGapY = 0;
+let shootPatternGapHeight = PLAYER_HEIGHT * 3.5; // Even larger gap for easier dodging
+
 function drawPlayer() {
-    // Improved player: blue body, white face, eyes, arms, legs
+    // Knight: blue armor, helmet, plume, shield
     ctx.save();
-    // Body
+    // Body (armor)
     ctx.fillStyle = '#3498db';
     ctx.beginPath();
     ctx.ellipse(player.x + player.width/2, player.y + player.height/2 + 4, player.width/2, player.height/2, 0, 0, 2*Math.PI);
     ctx.fill();
-    // Face
-    ctx.fillStyle = '#fff';
+    // Helmet
+    ctx.fillStyle = '#bfc9ca';
     ctx.beginPath();
-    ctx.ellipse(player.x + player.width/2, player.y + player.height/2 - 6, player.width/2.2, player.height/3.2, 0, 0, 2*Math.PI);
+    ctx.ellipse(player.x + player.width/2, player.y + player.height/2 - 10, player.width/2.2, player.height/3.2, 0, 0, 2*Math.PI);
     ctx.fill();
-    // Eyes
-    ctx.fillStyle = '#222';
+    // Helmet visor
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(player.x + player.width/2 - 5, player.y + player.height/2 - 8, 2, 0, 2*Math.PI);
-    ctx.arc(player.x + player.width/2 + 5, player.y + player.height/2 - 8, 2, 0, 2*Math.PI);
+    ctx.arc(player.x + player.width/2, player.y + player.height/2 - 10, player.width/2.2, Math.PI*0.15, Math.PI*0.85);
+    ctx.stroke();
+    // Plume
+    ctx.strokeStyle = '#e74c3c';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(player.x + player.width/2, player.y + player.height/2 - 18);
+    ctx.bezierCurveTo(player.x + player.width/2 + 2, player.y + player.height/2 - 28, player.x + player.width/2 - 8, player.y + player.height/2 - 32, player.x + player.width/2, player.y + player.height/2 - 22);
+    ctx.stroke();
+    // Eyes (visor slit)
+    ctx.strokeStyle = '#222';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(player.x + player.width/2 - 6, player.y + player.height/2 - 10);
+    ctx.lineTo(player.x + player.width/2 + 6, player.y + player.height/2 - 10);
+    ctx.stroke();
+    // Shield
+    ctx.save();
+    ctx.translate(player.x - 8, player.y + player.height/2 + 2);
+    ctx.rotate(-0.2);
+    ctx.fillStyle = '#bfc9ca';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 7, 13, 0, 0, 2*Math.PI);
     ctx.fill();
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
     // Arms
-    ctx.strokeStyle = '#fff';
+    ctx.strokeStyle = '#bfc9ca';
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.moveTo(player.x + 4, player.y + player.height/2);
@@ -111,38 +141,59 @@ function drawPlayer() {
 }
 
 function drawBoss() {
-    // Improved boss: big red body, yellow eyes, horns, mouth
+    // Intimidating boss: darker body, big horns, fangs, glowing eyes, angry mouth
     ctx.save();
     // Body
-    ctx.fillStyle = '#e74c3c';
+    let grad = ctx.createRadialGradient(boss.x + boss.width/2, boss.y + boss.height/2, 30, boss.x + boss.width/2, boss.y + boss.height/2, boss.width/2);
+    grad.addColorStop(0, '#a00');
+    grad.addColorStop(1, '#222');
+    ctx.fillStyle = grad;
     ctx.beginPath();
     ctx.ellipse(boss.x + boss.width/2, boss.y + boss.height/2, boss.width/2, boss.height/2, 0, 0, 2*Math.PI);
     ctx.fill();
-    // Eyes
+    // Eyes (glowing)
+    ctx.save();
+    ctx.shadowColor = '#ff0';
+    ctx.shadowBlur = 18;
     ctx.fillStyle = '#ffd700';
     ctx.beginPath();
-    ctx.ellipse(boss.x + boss.width/2 - 22, boss.y + boss.height/2 - 18, 10, 14, 0, 0, 2*Math.PI);
-    ctx.ellipse(boss.x + boss.width/2 + 22, boss.y + boss.height/2 - 18, 10, 14, 0, 0, 2*Math.PI);
+    ctx.ellipse(boss.x + boss.width/2 - 22, boss.y + boss.height/2 - 18, 12, 16, 0, 0, 2*Math.PI);
+    ctx.ellipse(boss.x + boss.width/2 + 22, boss.y + boss.height/2 - 18, 12, 16, 0, 0, 2*Math.PI);
     ctx.fill();
+    ctx.restore();
     ctx.fillStyle = '#222';
     ctx.beginPath();
-    ctx.arc(boss.x + boss.width/2 - 22, boss.y + boss.height/2 - 14, 4, 0, 2*Math.PI);
-    ctx.arc(boss.x + boss.width/2 + 22, boss.y + boss.height/2 - 14, 4, 0, 2*Math.PI);
+    ctx.arc(boss.x + boss.width/2 - 22, boss.y + boss.height/2 - 14, 5, 0, 2*Math.PI);
+    ctx.arc(boss.x + boss.width/2 + 22, boss.y + boss.height/2 - 14, 5, 0, 2*Math.PI);
     ctx.fill();
-    // Horns
+    // Big horns
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 7;
+    ctx.beginPath();
+    ctx.moveTo(boss.x + boss.width/2 - 36, boss.y + boss.height/2 - 44);
+    ctx.bezierCurveTo(boss.x + boss.width/2 - 60, boss.y + boss.height/2 - 80, boss.x + boss.width/2 - 10, boss.y + boss.height/2 - 80, boss.x + boss.width/2 - 8, boss.y + boss.height/2 - 44);
+    ctx.moveTo(boss.x + boss.width/2 + 36, boss.y + boss.height/2 - 44);
+    ctx.bezierCurveTo(boss.x + boss.width/2 + 60, boss.y + boss.height/2 - 80, boss.x + boss.width/2 + 10, boss.y + boss.height/2 - 80, boss.x + boss.width/2 + 8, boss.y + boss.height/2 - 44);
+    ctx.stroke();
+    // Fangs
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.moveTo(boss.x + boss.width/2 - 10, boss.y + boss.height/2 + 38);
+    ctx.lineTo(boss.x + boss.width/2 - 14, boss.y + boss.height/2 + 54);
+    ctx.lineTo(boss.x + boss.width/2 - 4, boss.y + boss.height/2 + 44);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(boss.x + boss.width/2 + 10, boss.y + boss.height/2 + 38);
+    ctx.lineTo(boss.x + boss.width/2 + 14, boss.y + boss.height/2 + 54);
+    ctx.lineTo(boss.x + boss.width/2 + 4, boss.y + boss.height/2 + 44);
+    ctx.closePath();
+    ctx.fill();
+    // Angry mouth
     ctx.strokeStyle = '#fff';
     ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.moveTo(boss.x + boss.width/2 - 32, boss.y + boss.height/2 - 40);
-    ctx.lineTo(boss.x + boss.width/2 - 44, boss.y + boss.height/2 - 60);
-    ctx.moveTo(boss.x + boss.width/2 + 32, boss.y + boss.height/2 - 40);
-    ctx.lineTo(boss.x + boss.width/2 + 44, boss.y + boss.height/2 - 60);
-    ctx.stroke();
-    // Mouth
-    ctx.strokeStyle = '#222';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(boss.x + boss.width/2, boss.y + boss.height/2 + 24, 18, 0, Math.PI, false);
+    ctx.arc(boss.x + boss.width/2, boss.y + boss.height/2 + 32, 22, Math.PI*0.15, Math.PI*0.85, false);
     ctx.stroke();
     ctx.restore();
 }
@@ -454,27 +505,85 @@ function updateBossBullets() {
     });
 }
 
+function updateBossAimingProjectiles() {
+    const MAX_AIMING_SPEED = 18;
+    for (let i = bossAimingProjectiles.length - 1; i >= 0; i--) {
+        let proj = bossAimingProjectiles[i];
+        // Add age and speed if not present
+        if (proj.age === undefined) proj.age = 0;
+        if (proj.speed === undefined) proj.speed = 11;
+        proj.age++;
+        // Gradually increase speed up to a cap
+        proj.speed = Math.min(MAX_AIMING_SPEED, proj.speed + 0.18);
+        // Homing strength reduced for blue aiming projectiles
+        let homingStrength = 0.003; // Reduced homing
+        // Add homing effect: slightly adjust velocity toward player each frame
+        let px = player.x + player.width / 2;
+        let py = player.y + player.height / 2;
+        let cx = proj.x + proj.w / 2;
+        let cy = proj.y + proj.h / 2;
+        let dx = px - cx;
+        let dy = py - cy;
+        let dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > 0) {
+            let targetVx = (dx / dist) * proj.speed;
+            let targetVy = (dy / dist) * proj.speed;
+            proj.vx = proj.vx * (1 - homingStrength) + targetVx * homingStrength;
+            proj.vy = proj.vy * (1 - homingStrength) + targetVy * homingStrength;
+        }
+        proj.x += proj.vx;
+        proj.y += proj.vy;
+        // Remove if off screen
+        if (
+            proj.x > canvas.width ||
+            proj.x + proj.w < 0 ||
+            proj.y > canvas.height ||
+            proj.y + proj.h < 0
+        ) {
+            bossAimingProjectiles.splice(i, 1);
+            continue;
+        }
+        // Collision with player
+        if (
+            proj.x < player.x + player.width &&
+            proj.x + proj.w > player.x &&
+            proj.y < player.y + player.height &&
+            proj.y + proj.h > player.y &&
+            player.health > 0
+        ) {
+            player.health -= 1.5; // Heavy damage
+            bossAimingProjectiles.splice(i, 1);
+        }
+    }
+}
+
 function updateBossHomingProjectiles() {
     bossHomingProjectiles.forEach((proj, i) => {
-        // Homing logic
+        // Homing logic (fixed speed, much faster, lasts until end of next attack)
         let dx = (player.x + player.width / 2) - (proj.x + proj.w / 2);
         let dy = (player.y + player.height / 2) - (proj.y + proj.h / 2);
         let dist = Math.sqrt(dx * dx + dy * dy);
+        let homingStrength = 0.003; // Keep homing as before
+        let speed = 6.5; // Much faster, fixed speed
+        proj.speed = speed;
         if (dist !== 0) {
-            dx /= dist;
-            dy /= dist;
+            let targetVx = (dx / dist) * speed;
+            let targetVy = (dy / dist) * speed;
+            proj.vx = (proj.vx || 0) * (1 - homingStrength) + targetVx * homingStrength;
+            proj.vy = (proj.vy || 0) * (1 - homingStrength) + targetVy * homingStrength;
         }
-        proj.vx = dx * proj.speed; // Slower, more dogfight style
-        proj.vy = dy * proj.speed;
         proj.x += proj.vx;
         proj.y += proj.vy;
-        // Timeout after 8 seconds (unless persistent through next attack)
-        if (!homingBallPersistent) {
-            proj.lifetime--;
-            if (proj.lifetime <= 0) {
-                bossHomingProjectiles.splice(i, 1);
-                return;
-            }
+        // No lifetime decrement here; removal is handled after the next attack
+        // Remove if off screen
+        if (
+            proj.x > canvas.width ||
+            proj.x + proj.w < 0 ||
+            proj.y > canvas.height ||
+            proj.y + proj.h < 0
+        ) {
+            bossHomingProjectiles.splice(i, 1);
+            return;
         }
         // Collision with player
         if (
@@ -491,8 +600,6 @@ function updateBossHomingProjectiles() {
             homingBallAttackCount = 0;
             return;
         }
-        // REMOVE: Collision with platforms (ball now passes through platforms)
-        // REMOVE: Collision with walls (ball now passes through walls)
     });
 }
 
@@ -513,12 +620,43 @@ function updateBossHomingExplosions() {
 }
 
 function drawBossHomingProjectiles() {
-    ctx.fillStyle = '#fa0';
     bossHomingProjectiles.forEach(proj => {
+        ctx.save();
+        ctx.shadowColor = '#fa0';
+        ctx.shadowBlur = 18;
+        let grad = ctx.createRadialGradient(proj.x + proj.w/2, proj.y + proj.h/2, 4, proj.x + proj.w/2, proj.y + proj.h/2, proj.w/2);
+        grad.addColorStop(0, '#fff');
+        grad.addColorStop(0.5, '#fa0');
+        grad.addColorStop(1, '#f44');
+        ctx.fillStyle = grad;
         ctx.beginPath();
         ctx.arc(proj.x + proj.w / 2, proj.y + proj.h / 2, proj.w / 2, 0, 2 * Math.PI);
         ctx.fill();
+        ctx.restore();
     });
+}
+
+function drawBossAimingProjectiles() {
+    ctx.save();
+    bossAimingProjectiles.forEach(proj => {
+        ctx.save();
+        ctx.shadowColor = '#0ff';
+        ctx.shadowBlur = 16;
+        let grad = ctx.createRadialGradient(proj.x + proj.w/2, proj.y + proj.h/2, 2, proj.x + proj.w/2, proj.y + proj.h/2, proj.w/2);
+        grad.addColorStop(0, '#fff');
+        grad.addColorStop(0.5, '#0ff');
+        grad.addColorStop(1, '#09c');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(
+            proj.x + proj.w / 2,
+            proj.y + proj.h / 2,
+            proj.w / 2, 0, 2 * Math.PI
+        );
+        ctx.fill();
+        ctx.restore();
+    });
+    ctx.restore();
 }
 
 function drawBossHomingExplosions() {
@@ -533,134 +671,41 @@ function drawBossHomingExplosions() {
     });
 }
 
+function drawPlatforms() {
+    ctx.save();
+    platforms.forEach(p => {
+        ctx.fillStyle = '#888';
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.rect(p.x, p.y, p.w, p.h);
+        ctx.fill();
+        ctx.stroke();
+    });
+    ctx.restore();
+}
+
 // Track if player is in boss attack zones for continuous damage
 let swordSlashActive = false;
+let swordSlashPosition = 'bottom';
+let homingBallPersistent = false;
+let homingBallAttackCount = 0;
+let shootPatternIndex = 0;
 
-// Add windup state for boss attacks
+// Boss windup state
 let bossWindup = false;
 let bossWindupType = null;
 let bossWindupTimer = 0;
-const WINDUP_DURATION = 40;
+// Add aiming attack state
+let bossAimingProjectiles = [];
 
-// Boss shooting pattern (now covers the whole screen except for a gap)
-let shootPatternGapY = 0;
-let shootPatternGapHeight = PLAYER_HEIGHT * 3.5; // Even larger gap for easier dodging
+// Fix: define gameOver and fightStarted before use
+let gameOver = false;
+let fightStarted = false;
 
-function bossAttack() {
-    if (boss.attackCooldown > 0) {
-        boss.attackCooldown--;
-        swordSlashActive = false;
-        bossWindup = false;
-        return;
-    }
-    if (!boss.attackType && !bossWindup) {
-        // If a persistent homing ball exists, increment attack count
-        if (bossHomingProjectiles.length > 0 && homingBallPersistent) {
-            homingBallAttackCount++;
-            // Remove the ball at the end of the next attack
-            if (homingBallAttackCount > 1) {
-                bossHomingProjectiles = [];
-                homingBallPersistent = false;
-                homingBallAttackCount = 0;
-            }
-        }
-        // Randomly pick attack and start windup
-        let attacks = ['shoot', 'sword', 'homing'];
-        // If a homing projectile is on screen, prevent 'sword' (top) as next attack
-        if (bossHomingProjectiles.length > 0) {
-            // Only allow 'sword' if it would be 'bottom' (set in windup below), so remove 'sword' from attacks for now
-            attacks = attacks.filter(a => a !== 'sword');
-        }
-        bossWindupType = attacks[Math.floor(Math.random() * attacks.length)];
-        bossWindup = true;
-        bossWindupTimer = 0;
-        // Set swordSlashPosition at the start of windup for sword
-        if (bossWindupType === 'sword') {
-            // If a homing projectile is on screen, force 'bottom' slash
-            if (bossHomingProjectiles.length > 0) {
-                swordSlashPosition = 'bottom';
-            } else {
-                swordSlashPosition = Math.random() < 0.5 ? 'top' : 'bottom';
-            }
-        }
-        return;
-    }
-    if (bossWindup) {
-        bossWindupTimer++;
-        if (bossWindupTimer >= 40) {
-            boss.attackType = bossWindupType;
-            boss.attackTimer = 0;
-            bossWindup = false;
-            // No gap for reverted shooting attack
-        }
-        swordSlashActive = false;
-        return;
-    }
-    if (boss.attackType === 'shoot') {
-        swordSlashActive = false;
-        let shootInterval = 22; // Even slower shooting
-        if (boss.attackTimer % shootInterval === 0) {
-            let projectileHeight = 40;
-            // Restore original: fill the screen with bullets except for the gap
-            for (let y = 0; y < platforms[0].y; y += projectileHeight) {
-                if (
-                    y + projectileHeight > shootPatternGapY &&
-                    y < shootPatternGapY + shootPatternGapHeight
-                ) {
-                    continue;
-                }
-                boss.bullets.push({
-                    x: canvas.width + 48, // Start just off the right edge
-                    y: y,
-                    w: 48,
-                    h: projectileHeight,
-                    speed: 3.5, // Slower boss bullet, moves left
-                    direction: -1 // Leftward
-                });
-            }
-        }
-        boss.attackTimer++;
-        if (boss.attackTimer > 36) { // Shorter attack duration
-            boss.attackType = null;
-            boss.attackCooldown = 60; // Longer cooldown
-        }
-    } else if (boss.attackType === 'sword') {
-        if (boss.attackTimer === 0) {
-            boss.swordSlashing = true;
-            // swordSlashPosition is already set during windup
-        }
-        swordSlashActive = boss.attackTimer > 20 && boss.attackTimer <= 60; // Slower windup/active
-        boss.attackTimer++;
-        if (boss.attackTimer > 60) {
-            boss.swordSlashing = false;
-            boss.attackType = null;
-            boss.attackCooldown = 80; // Longer cooldown
-            swordSlashActive = false;
-        }
-    } else if (boss.attackType === 'homing') {
-        // Only one homing ball at a time, fire at the start of the attack
-        if (boss.attackTimer === 0 && bossHomingProjectiles.length === 0) {
-            bossHomingProjectiles.push({
-                x: boss.x + boss.width / 2 - 16,
-                y: boss.y + boss.height / 2 - 16,
-                w: 32,
-                h: 32,
-                speed: 2.5, // Slow for dogfight style
-                vx: 0,
-                vy: 0,
-                lifetime: 480 // 8 seconds at 60 FPS (lasts through next attack)
-            });
-            homingBallPersistent = true;
-            homingBallAttackCount = 0;
-        }
-        boss.attackTimer++;
-        // End attack after a while, but let the ball persist
-        if (boss.attackTimer > 120) {
-            boss.attackType = null;
-            boss.attackCooldown = 80;
-        }
-    }
-}
+// Fix: define countdownTimer and countdown before use
+let countdown = 3;
+let countdownTimer = 0;
 
 function checkBossAttackDamage() {
     // Sword slash zone
@@ -687,177 +732,220 @@ function checkBossAttackDamage() {
     }
 }
 
-function drawSwordSlash() {
-    if (boss.swordSlashing) {
-        ctx.fillStyle = 'rgba(200,200,255,0.4)';
-        // Find the lowest platform
-        let lowestPlatform = platforms.reduce((a, b) => (a.y > b.y ? a : b));
-        if (swordSlashPosition === 'bottom') {
-            // Cover everything below the lowest platform
-            ctx.fillRect(0, lowestPlatform.y + lowestPlatform.h, canvas.width, canvas.height - (lowestPlatform.y + lowestPlatform.h));
-            ctx.fillStyle = '#fff';
-            ctx.font = '28px sans-serif';
-            ctx.fillText('SWORD SLASH!', canvas.width / 2 - 90, lowestPlatform.y + lowestPlatform.h + 40);
-        } else {
-            // Cover everything above the lowest platform
-            ctx.fillRect(0, 0, canvas.width, lowestPlatform.y);
-            ctx.fillStyle = '#fff';
-            ctx.font = '28px sans-serif';
-            ctx.fillText('SWORD SLASH!', canvas.width / 2 - 90, lowestPlatform.y - 20);
-        }
+function bossAttack() {
+    if (boss.attackCooldown > 0) {
+        boss.attackCooldown--;
+        swordSlashActive = false;
+        bossWindup = false;
+        return;
     }
-}
-
-function drawBossWindup() {
-    if (gameOver) return; // Do not draw windup text if game is over
-    if (bossWindup) {
-        ctx.save();
-        ctx.globalAlpha = 0.7;
-        ctx.strokeStyle = '#ff0';
-        ctx.lineWidth = 6;
-        ctx.strokeRect(boss.x - 8, boss.y - 8, boss.width + 16, boss.height + 16);
-        ctx.globalAlpha = 1.0;
-        ctx.fillStyle = '#ff0';
-        ctx.font = '24px sans-serif';
-        let text = '';
-        if (bossWindupType === 'shoot') text = 'Boss is aiming!';
-        if (bossWindupType === 'sword') {
-            if (typeof swordSlashPosition !== 'undefined' && swordSlashPosition) {
-                let lowestPlatform = platforms.reduce((a, b) => (a.y > b.y ? a : b));
-                ctx.save();
-                ctx.globalAlpha = 0.35;
-                ctx.fillStyle = '#3af'; // Blue highlight
-                if (swordSlashPosition === 'top') {
-                    ctx.fillRect(0, 0, canvas.width, lowestPlatform.y);
-                    text = 'Boss is winding up a TOP slash!';
-                } else {
-                    ctx.fillRect(0, lowestPlatform.y + lowestPlatform.h, canvas.width, canvas.height - (lowestPlatform.y + lowestPlatform.h));
-                    text = 'Boss is winding up a BOTTOM slash!';
-                }
-                ctx.restore();
-            } else {
-                text = 'Boss is winding up a slash!';
+    if (!boss.attackType && !bossWindup) {
+        if (bossHomingProjectiles.length > 0 && homingBallPersistent) {
+            homingBallAttackCount++;
+            if (homingBallAttackCount > 1) {
+                bossHomingProjectiles = [];
+                homingBallPersistent = false;
+                homingBallAttackCount = 0;
             }
         }
-        if (bossWindupType === 'homing') text = 'Boss is charging a homing shot!';
-        ctx.fillText(text, boss.x - 40, boss.y - 20);
-        ctx.restore();
-    }
-}
-
-function drawPlatforms() {
-    ctx.fillStyle = '#888';
-    platforms.forEach(p => {
-        ctx.fillRect(p.x, p.y, p.w, p.h);
-    });
-}
-
-let gameOver = false;
-
-// Countdown and fight start
-let fightStarted = false;
-let countdown = 3;
-let countdownTimer = 0;
-
-function drawCountdown() {
-    if (!fightStarted) {
-        ctx.save();
-        ctx.font = '64px sans-serif';
-        ctx.fillStyle = '#fff';
-        if (countdown > 0) {
-            ctx.fillText(countdown, canvas.width / 2 - 20, canvas.height / 2);
-        } else {
-            ctx.fillText('FIGHT!', canvas.width / 2 - 90, canvas.height / 2);
+        let attacks = ['sword', 'homing', 'aim'];
+        // Prevent homing attack if a homing projectile is still on screen
+        if (bossHomingProjectiles.length > 0) {
+            attacks = attacks.filter(a => a !== 'homing');
         }
+        if (bossHomingProjectiles.length > 0) {
+            attacks = attacks.filter(a => a !== 'sword');
+        }
+        bossWindupType = attacks[Math.floor(Math.random() * attacks.length)];
+        bossWindup = true;
+        bossWindupTimer = 0;
+        if (bossWindupType === 'sword') {
+            if (bossHomingProjectiles.length > 0) {
+                swordSlashPosition = 'bottom';
+            } else {
+                swordSlashPosition = Math.random() < 0.5 ? 'top' : 'bottom';
+            }
+        }
+        return;
+    }
+    if (bossWindup) {
+        bossWindupTimer++;
+        if (bossWindupTimer >= 40) {
+            boss.attackType = bossWindupType;
+            boss.attackTimer = 0;
+            bossWindup = false;
+        }
+        swordSlashActive = false;
+        return;
+    }
+    if (boss.attackType === 'sword') {
+        if (boss.attackTimer === 0) {
+            boss.swordSlashing = true;
+        }
+        swordSlashActive = boss.attackTimer > 20 && boss.attackTimer <= 60;
+        boss.attackTimer++;
+        if (boss.attackTimer > 60) {
+            boss.swordSlashing = false;
+            boss.attackType = null;
+            boss.attackCooldown = 80;
+            swordSlashActive = false;
+        }
+    } else if (boss.attackType === 'homing') {
+        if (boss.attackTimer === 0 && bossHomingProjectiles.length === 0) {
+            bossHomingProjectiles.push({
+                x: boss.x + boss.width / 2 - 16,
+                y: boss.y + boss.height / 2 - 16,
+                w: 32,
+                h: 32,
+                speed: 6.5, // much faster
+                vx: 0,
+                vy: 0,
+                // No lifetime property needed
+            });
+            homingBallPersistent = true;
+            homingBallAttackCount = 0;
+        }
+        boss.attackTimer++;
+        if (boss.attackTimer > 120) {
+            boss.attackType = null;
+            boss.attackCooldown = 80;
+        }
+    } else if (boss.attackType === 'aim') {
+        // Improved aiming attack: fire 3 fast projectiles in sequence
+        if (boss.attackTimer % 8 === 0 && boss.attackTimer < 24) {
+            let bx = boss.x + boss.width / 2 - 10;
+            let by = boss.y + boss.height / 2 - 10;
+            let px = player.x + player.width / 2;
+            let py = player.y + player.height / 2;
+            let dx = px - bx;
+            let dy = py - by;
+            let dist = Math.sqrt(dx * dx + dy * dy);
+            let speed = 11;
+            bossAimingProjectiles.push({
+                x: bx,
+                y: by,
+                w: 20,
+                h: 20,
+                vx: (dx / dist) * speed,
+                vy: (dy / dist) * speed
+            });
+        }
+        boss.attackTimer++;
+        if (boss.attackTimer > 32) {
+            boss.attackType = null;
+            boss.attackCooldown = 70;
+        }
+    }
+}
+
+function drawSwordSlash() {
+    if (boss.swordSlashing) {
+        ctx.save();
+        // Improved sword slash look: animated energy wave
+        // Find the lowest platform
+        let lowestPlatform = platforms.reduce((a, b) => (a.y > b.y ? a : b));
+        let slashY, slashHeight, textY;
+        if (swordSlashPosition === 'bottom') {
+            slashY = lowestPlatform.y + lowestPlatform.h;
+            slashHeight = canvas.height - slashY;
+            textY = slashY + 40;
+        } else {
+            slashY = 0;
+            slashHeight = lowestPlatform.y;
+            textY = lowestPlatform.y - 20;
+        }
+        // Animated energy wave
+        let time = Date.now() / 120;
+        for (let i = 0; i < 5; i++) {
+            ctx.globalAlpha = 0.18 - i * 0.03;
+            ctx.fillStyle = i % 2 === 0 ? '#bfc9ca' : '#6cf';
+            ctx.beginPath();
+            ctx.moveTo(0, slashY + i * 6 + Math.sin(time + i) * 8);
+            ctx.lineTo(canvas.width, slashY + i * 6 + Math.sin(time + i + 1) * 8);
+            ctx.lineTo(canvas.width, slashY + slashHeight + i * 6);
+            ctx.lineTo(0, slashY + slashHeight + i * 6);
+            ctx.closePath();
+            ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 32px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('SWORD SLASH!', canvas.width / 2, textY);
         ctx.restore();
     }
 }
 
-function drawEXChargeBar() {
-    // Draw EX charge bar at bottom center
-    const barWidth = 200;
-    const barHeight = 18;
-    const x = canvas.width / 2 - barWidth / 2;
-    const y = canvas.height - 32;
-    ctx.save();
-    ctx.fillStyle = '#222';
-    ctx.fillRect(x, y, barWidth, barHeight);
-    ctx.fillStyle = exReady ? '#ff0' : '#0cf';
-    ctx.fillRect(x, y, (exCharge / EX_CHARGE_MAX) * barWidth, barHeight);
-    ctx.strokeStyle = '#fff';
-    ctx.strokeRect(x, y, barWidth, barHeight);
-    ctx.font = '16px sans-serif';
-    ctx.fillStyle = exReady ? '#ff0' : '#fff';
-    ctx.fillText(exReady ? 'EX READY!' : 'EX CHARGE', x + barWidth / 2 - 40, y + 14);
-    ctx.restore();
-}
-
-function checkGameOver() {
-    if (player.health <= 0) {
-        ctx.fillStyle = '#f00';
-        ctx.font = '48px sans-serif';
-        ctx.fillText('GAME OVER', canvas.width / 2 - 140, canvas.height / 2);
-        ctx.font = '28px sans-serif';
-        ctx.fillStyle = '#fff';
-        ctx.fillText('Press R to Restart', canvas.width / 2 - 110, canvas.height / 2 + 50);
-        gameOver = true;
-        // Reset EX charge on loss
-        exCharge = 0;
-        exReady = false;
-        exActive = false;
-        return true;
-    } else if (boss.health <= 0) {
-        ctx.fillStyle = '#0f0';
-        ctx.font = '48px sans-serif';
-        ctx.fillText('YOU WIN!', canvas.width / 2 - 120, canvas.height / 2);
-        ctx.font = '28px sans-serif';
-        ctx.fillStyle = '#fff';
-        ctx.fillText('Press R to Restart', canvas.width / 2 - 110, canvas.height / 2 + 50);
-        gameOver = true;
-        return true;
+// Draws a visual warning when the boss is winding up for an attack
+function drawBossWindup() {
+    if (typeof bossWindup !== 'undefined' && bossWindup) {
+        ctx.save();
+        // Glowing red outline
+        ctx.shadowColor = '#f00';
+        ctx.shadowBlur = 32;
+        ctx.lineWidth = 8;
+        ctx.strokeStyle = 'rgba(255,0,0,0.7)';
+        ctx.beginPath();
+        ctx.ellipse(boss.x + boss.width/2, boss.y + boss.height/2, boss.width/2 + 10, boss.height/2 + 10, 0, 0, 2*Math.PI);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        // Choose color based on attack type
+        let markColor = '#ff0'; // default yellow
+        if (bossWindupType === 'sword') markColor = '#bbb'; // gray for sword slash
+        else if (bossWindupType === 'homing') markColor = '#fa0'; // orange/yellow
+        else if (bossWindupType === 'aim') markColor = '#0ff'; // cyan
+        // Draw warning text above boss
+        ctx.font = 'bold 40px sans-serif';
+        ctx.fillStyle = markColor;
+        ctx.textAlign = 'center';
+        ctx.fillText('!!', boss.x + boss.width/2, boss.y - 10);
+        ctx.restore();
     }
-    return false;
-}
-
-function restartGame() {
-    player.health = PLAYER_MAX_HEALTH;
-    boss.health = BOSS_MAX_HEALTH;
-    player.bullets = [];
-    boss.bullets = [];
-    bossHomingProjectiles = [];
-    bossHomingExplosions = [];
-    player.x = 60;
-    player.y = canvas.height - PLAYER_HEIGHT - 20;
-    boss.x = canvas.width - BOSS_WIDTH - 60;
-    boss.y = canvas.height - BOSS_HEIGHT - 20;
-    gameOver = false;
-    fightStarted = false;
-    countdown = 3;
-    countdownTimer = 0;
-    // Reset all boss attack states
-    boss.swordSlashing = false;
-    swordSlashActive = false;
-    bossWindup = false;
-    bossWindupType = null;
-    bossWindupTimer = 0;
-    boss.attackType = null;
-    boss.attackCooldown = 0;
-    boss.attackTimer = 0;
-    swordSlashPosition = 'bottom';
-    shootPatternIndex = 0;
-    // Reset EX charge and state on restart
-    exCharge = 0;
-    exReady = false;
-    exActive = false;
 }
 
 function drawBullets() {
-    // Player bullets
-    ctx.fillStyle = '#fff';
-    player.bullets.forEach(b => ctx.fillRect(b.x, b.y, b.w, b.h));
-    // Boss bullets
-    ctx.fillStyle = '#ff0';
-    boss.bullets.forEach(b => ctx.fillRect(b.x, b.y, b.w, b.h));
+    // Draw player bullets
+    player.bullets.forEach(b => {
+        ctx.save();
+        if (b.ex) {
+            // EX attack: big, glowing, gold
+            ctx.shadowColor = '#ffd700';
+            ctx.shadowBlur = 18;
+            let grad = ctx.createRadialGradient(b.x + b.w/2, b.y + b.h/2, 4, b.x + b.w/2, b.y + b.h/2, b.w/2);
+            grad.addColorStop(0, '#fff');
+            grad.addColorStop(0.5, '#ffd700');
+            grad.addColorStop(1, '#fa0');
+            ctx.fillStyle = grad;
+        } else {
+            // Normal bullet: blue, glowing
+            ctx.shadowColor = '#6cf';
+            ctx.shadowBlur = 10;
+            let grad = ctx.createRadialGradient(b.x + b.w/2, b.y + b.h/2, 2, b.x + b.w/2, b.y + b.h/2, b.w/2);
+            grad.addColorStop(0, '#fff');
+            grad.addColorStop(0.5, '#6cf');
+            grad.addColorStop(1, '#3498db');
+            ctx.fillStyle = grad;
+        }
+        ctx.beginPath();
+        ctx.ellipse(b.x + b.w/2, b.y + b.h/2, b.w/2, b.h/2, 0, 0, 2*Math.PI);
+        ctx.fill();
+        ctx.restore();
+    });
+    // Draw boss bullets (if any)
+    boss.bullets.forEach(b => {
+        ctx.save();
+        ctx.shadowColor = '#f44';
+        ctx.shadowBlur = 10;
+        let grad = ctx.createRadialGradient(b.x + b.w/2, b.y + b.h/2, 2, b.x + b.w/2, b.y + b.h/2, b.w/2);
+        grad.addColorStop(0, '#fff');
+        grad.addColorStop(0.5, '#f44');
+        grad.addColorStop(1, '#a00');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.ellipse(b.x + b.w/2, b.y + b.h/2, b.w/2, b.h/2, 0, 0, 2*Math.PI);
+        ctx.fill();
+        ctx.restore();
+    });
 }
 
 function gameLoop() {
@@ -878,6 +966,7 @@ function gameLoop() {
         updateBossBullets();
         updateBossHomingProjectiles();
         updateBossHomingExplosions();
+        updateBossAimingProjectiles(); // update aiming attack
         bossAttack();
         checkBossAttackDamage();
     }
@@ -888,6 +977,7 @@ function gameLoop() {
     drawSwordSlash();
     drawBossHomingProjectiles();
     drawBossHomingExplosions();
+    drawBossAimingProjectiles(); // draw aiming attack
     drawBossWindup();
     drawHealthBars();
     drawCountdown();
@@ -898,3 +988,16 @@ function gameLoop() {
 
 gameLoop();
 };
+
+/*
+INSTRUCTIONS:
+- Arrow keys: Move and jump (Up to jump, Down to drop through platforms)
+- Z: Shoot (max 3 bullets on screen)
+- X: EX attack (when EX bar is full)
+- R: Restart after game over/win
+
+BOSS ATTACKS:
+- Sword Slash: Covers top or bottom half of arena, now with animated energy wave effect.
+- Orange Homing Ball: Much faster, fixed speed, lasts until the end of the next boss attack (not just a timer).
+- Blue Aiming Attack: Fires 3 projectiles in sequence, each with reduced homing.
+*/
