@@ -515,8 +515,8 @@ function updateBossAimingProjectiles() {
         proj.age++;
         // Gradually increase speed up to a cap
         proj.speed = Math.min(MAX_AIMING_SPEED, proj.speed + 0.18);
-        // Homing strength increased for more visible homing
-        let homingStrength = 0.02; // Increased homing for blue aiming projectiles
+        // Homing strength much weaker for blue aiming projectiles
+        let homingStrength = 0.003; // Weaker homing for blue aiming projectiles
         // Add homing effect: slightly adjust velocity toward player each frame
         let px = player.x + player.width / 2;
         let py = player.y + player.height / 2;
@@ -563,7 +563,7 @@ function updateBossHomingProjectiles() {
         let dx = (player.x + player.width / 2) - (proj.x + proj.w / 2);
         let dy = (player.y + player.height / 2) - (proj.y + proj.h / 2);
         let dist = Math.sqrt(dx * dx + dy * dy);
-        let homingStrength = 0.003; // Keep homing as before
+        let homingStrength = 0.02; // Much stronger homing for orange homing ball
         let speed = 6.5; // Much faster, fixed speed
         proj.speed = speed;
         if (dist !== 0) {
