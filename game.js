@@ -150,7 +150,7 @@ function drawBoss() {
 function drawHealthBars() {
     // Player
     ctx.save();
-    ctx.font = '20px Arial';
+    ctx.font = '20px sans-serif';
     ctx.fillStyle = '#fff';
     ctx.fillText('Player', 20, 30);
     // Player health bar background
@@ -180,7 +180,7 @@ function drawHealthBars() {
 
     // Boss
     ctx.save();
-    ctx.font = '20px Arial';
+    ctx.font = '20px sans-serif';
     ctx.fillStyle = '#fff';
     ctx.fillText('Boss', 600, 30);
     // Boss health bar background
@@ -696,13 +696,13 @@ function drawSwordSlash() {
             // Cover everything below the lowest platform
             ctx.fillRect(0, lowestPlatform.y + lowestPlatform.h, canvas.width, canvas.height - (lowestPlatform.y + lowestPlatform.h));
             ctx.fillStyle = '#fff';
-            ctx.font = '28px Arial';
+            ctx.font = '28px sans-serif';
             ctx.fillText('SWORD SLASH!', canvas.width / 2 - 90, lowestPlatform.y + lowestPlatform.h + 40);
         } else {
             // Cover everything above the lowest platform
             ctx.fillRect(0, 0, canvas.width, lowestPlatform.y);
             ctx.fillStyle = '#fff';
-            ctx.font = '28px Arial';
+            ctx.font = '28px sans-serif';
             ctx.fillText('SWORD SLASH!', canvas.width / 2 - 90, lowestPlatform.y - 20);
         }
     }
@@ -718,7 +718,7 @@ function drawBossWindup() {
         ctx.strokeRect(boss.x - 8, boss.y - 8, boss.width + 16, boss.height + 16);
         ctx.globalAlpha = 1.0;
         ctx.fillStyle = '#ff0';
-        ctx.font = '24px Arial';
+        ctx.font = '24px sans-serif';
         let text = '';
         if (bossWindupType === 'shoot') text = 'Boss is aiming!';
         if (bossWindupType === 'sword') {
@@ -762,58 +762,63 @@ let countdownTimer = 0;
 function drawCountdown() {
     if (!fightStarted) {
         ctx.save();
-        }tx.fillStyle = '#fff';
-        ctx.restore();px Arial';
-    }   if (countdown > 0) {
-}           ctx.fillText(countdown, canvas.width / 2 - 20, canvas.height / 2);
+        ctx.font = '64px sans-serif';
+        ctx.fillStyle = '#fff';
+        if (countdown > 0) {
+            ctx.fillText(countdown, canvas.width / 2 - 20, canvas.height / 2);
         } else {
-function drawEXChargeBar() {GHT!', canvas.width / 2 - 90, canvas.height / 2);
+            ctx.fillText('FIGHT!', canvas.width / 2 - 90, canvas.height / 2);
+        }
+        ctx.restore();
+    }
+}
+
+function drawEXChargeBar() {
     // Draw EX charge bar at bottom center
     const barWidth = 200;
     const barHeight = 18;
     const x = canvas.width / 2 - barWidth / 2;
     const y = canvas.height - 32;
-    ctx.save();ChargeBar() {
-    ctx.fillStyle = '#222';t bottom center
+    ctx.save();
+    ctx.fillStyle = '#222';
     ctx.fillRect(x, y, barWidth, barHeight);
     ctx.fillStyle = exReady ? '#ff0' : '#0cf';
     ctx.fillRect(x, y, (exCharge / EX_CHARGE_MAX) * barWidth, barHeight);
-    ctx.strokeStyle = '#fff'; 32;
+    ctx.strokeStyle = '#fff';
     ctx.strokeRect(x, y, barWidth, barHeight);
-    ctx.font = '16px Arial';
+    ctx.font = '16px sans-serif';
     ctx.fillStyle = exReady ? '#ff0' : '#fff';
     ctx.fillText(exReady ? 'EX READY!' : 'EX CHARGE', x + barWidth / 2 - 40, y + 14);
-    ctx.restore();, y, (exCharge / EX_CHARGE_MAX) * barWidth, barHeight);
-}   ctx.strokeStyle = '#fff';
-    ctx.strokeRect(x, y, barWidth, barHeight);
-function checkGameOver() {';
-    if (player.health <= 0) { '#ff0' : '#fff';
-        ctx.fillStyle = '#f00';READY!' : 'EX CHARGE', x + barWidth / 2 - 40, y + 14);
-        ctx.font = '48px Arial';
+    ctx.restore();
+}
+
+function checkGameOver() {
+    if (player.health <= 0) {
+        ctx.fillStyle = '#f00';
+        ctx.font = '48px sans-serif';
         ctx.fillText('GAME OVER', canvas.width / 2 - 140, canvas.height / 2);
-        ctx.font = '28px Arial';
+        ctx.font = '28px sans-serif';
         ctx.fillStyle = '#fff';
         ctx.fillText('Press R to Restart', canvas.width / 2 - 110, canvas.height / 2 + 50);
-        gameOver = true;'#f00';
-        // Reset EX charge on loss
-        exCharge = 0;'GAME OVER', canvas.width / 2 - 140, canvas.height / 2);
-        exReady = false; Arial';
-        exActive = false;#fff';
-        return true;('Press R to Restart', canvas.width / 2 - 110, canvas.height / 2 + 50);
-    } else if (boss.health <= 0) {
-        ctx.fillStyle = '#0f0';oss
-        ctx.font = '48px Arial';
-        ctx.fillText('YOU WIN!', canvas.width / 2 - 120, canvas.height / 2);
-        ctx.font = '28px Arial';
-        ctx.fillStyle = '#fff';
-        ctx.fillText('Press R to Restart', canvas.width / 2 - 110, canvas.height / 2 + 50);
-        gameOver = true;'#0f0';
-        return true;48px Arial';
-    }   ctx.fillText('YOU WIN!', canvas.width / 2 - 120, canvas.height / 2);
-    gameOver = false;8px Arial';
-    return false;tyle = '#fff';
-}       ctx.fillText('Press R to Restart', canvas.width / 2 - 110, canvas.height / 2 + 50);
         gameOver = true;
+        // Reset EX charge on loss
+        exCharge = 0;
+        exReady = false;
+        exActive = false;
+        return true;
+    } else if (boss.health <= 0) {
+        ctx.fillStyle = '#0f0';
+        ctx.font = '48px sans-serif';
+        ctx.fillText('YOU WIN!', canvas.width / 2 - 120, canvas.height / 2);
+        ctx.font = '28px sans-serif';
+        ctx.fillStyle = '#fff';
+        ctx.fillText('Press R to Restart', canvas.width / 2 - 110, canvas.height / 2 + 50);
+        gameOver = true;
+        return true;
+    }
+    return false;
+}
+
 function restartGame() {
     player.health = PLAYER_MAX_HEALTH;
     boss.health = BOSS_MAX_HEALTH;
@@ -821,80 +826,72 @@ function restartGame() {
     boss.bullets = [];
     bossHomingProjectiles = [];
     bossHomingExplosions = [];
-    player.x = 60;= PLAYER_MAX_HEALTH;
+    player.x = 60;
     player.y = canvas.height - PLAYER_HEIGHT - 20;
     boss.x = canvas.width - BOSS_WIDTH - 60;
     boss.y = canvas.height - BOSS_HEIGHT - 20;
-    gameOver = false;iles = [];
-    fightStarted = false;= [];
+    gameOver = false;
+    fightStarted = false;
     countdown = 3;
-    countdownTimer = 0;eight - PLAYER_HEIGHT - 20;
-    // Reset all boss attack statesDTH - 60;
-    boss.swordSlashing = false;SS_HEIGHT - 20;
+    countdownTimer = 0;
+    // Reset all boss attack states
+    boss.swordSlashing = false;
     swordSlashActive = false;
-    bossWindup = false;e;
+    bossWindup = false;
     bossWindupType = null;
     bossWindupTimer = 0;
-    boss.attackType = null;k states
-    boss.attackCooldown = 0;se;
-    boss.attackTimer = 0;lse;
+    boss.attackType = null;
+    boss.attackCooldown = 0;
+    boss.attackTimer = 0;
     swordSlashPosition = 'bottom';
     shootPatternIndex = 0;
     // Reset EX charge and state on restart
-    exCharge = 0;pe = null;
-    exReady = false;own = 0;
-    exActive = false;= 0;
-}   swordSlashPosition = 'bottom';
-    shootPatternIndex = 0;
-// Add back the drawBullets functionrestart
+    exCharge = 0;
+    exReady = false;
+    exActive = false;
+}
+
 function drawBullets() {
     // Player bullets
     ctx.fillStyle = '#fff';
     player.bullets.forEach(b => ctx.fillRect(b.x, b.y, b.w, b.h));
     // Boss bullets
-    ctx.fillStyle = '#ff0'; function
+    ctx.fillStyle = '#ff0';
     boss.bullets.forEach(b => ctx.fillRect(b.x, b.y, b.w, b.h));
-}   // Player bullets
-    ctx.fillStyle = '#fff';
-// Game loopullets.forEach(b => ctx.fillRect(b.x, b.y, b.w, b.h));
+}
+
 function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (!fightStarted) {(b => ctx.fillRect(b.x, b.y, b.w, b.h));
+    if (!fightStarted) {
         countdownTimer++;
         if (countdownTimer % 60 === 0 && countdown > 0) {
             countdown--;
-        }gameLoop() {
+        }
         if (countdown === 0 && countdownTimer > 60 * 1.5) {
             fightStarted = true;
-        }ountdownTimer++;
-    }   if (countdownTimer % 60 === 0 && countdown > 0) {
+        }
+    }
     if (!gameOver && fightStarted) {
         handleInput();
-        updatePhysics();= 0 && countdownTimer > 60 * 1.5) {
-        updatePlayerBullets();e;
+        updatePhysics();
+        updatePlayerBullets();
         updateBossBullets();
         updateBossHomingProjectiles();
         updateBossHomingExplosions();
-        bossAttack();;
+        bossAttack();
         checkBossAttackDamage();
-    }   updatePlayerBullets();
-    drawPlatforms();llets();
-    drawPlayer();sHomingProjectiles();
-    drawBoss();ossHomingExplosions();
-    drawBullets();();
-    drawSwordSlash();ckDamage();
+    }
+    drawPlatforms();
+    drawPlayer();
+    drawBoss();
+    drawBullets();
+    drawSwordSlash();
     drawBossHomingProjectiles();
     drawBossHomingExplosions();
     drawBossWindup();
     drawHealthBars();
     drawCountdown();
     drawEXChargeBar();
-    checkGameOver();ojectiles();
-    requestAnimationFrame(gameLoop);
-}   drawBossWindup();
-    drawHealthBars();
-gameLoop();ntdown();
-};  drawEXChargeBar();
     checkGameOver();
     requestAnimationFrame(gameLoop);
 }
